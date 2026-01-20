@@ -9,7 +9,7 @@ Custodial Solana payment platform for USDC/USDT transfers with phone-number auth
 - **PostgreSQL** + Entity Framework Core
 - **Redis** for caching & rate limiting
 - **Hangfire** for background jobs
-- **Twilio** for SMS/OTP
+- **Twilio** for SMS/OTP + WhatsApp
 
 ## Project Structure
 
@@ -65,6 +65,11 @@ dotnet run --project src/PingPay.Api
 - Cached balance queries (Redis)
 - Background transaction monitoring
 
+### WhatsApp Bot
+- Send payments via chat: `send $10 to +1234567890`
+- Check balance: `balance`
+- View history: `history`
+
 ## API Endpoints
 
 | Endpoint | Description |
@@ -76,6 +81,7 @@ dotnet run --project src/PingPay.Api
 | `POST /api/payments/send` | Send payment |
 | `GET /api/payments/{id}` | Get transaction |
 | `GET /api/payments/history` | Transaction history |
+| `POST /api/whatsapp/webhook` | Twilio WhatsApp webhook |
 
 ## Background Jobs
 
@@ -109,3 +115,4 @@ dotnet test --filter "Category=Integration"
 - [Running the Backend](docs/RUNNING.md)
 - [Security & Encryption](docs/SECURITY.md)
 - [Solana Integration](docs/SOLANA_INTEGRATION.md)
+- [WhatsApp Bot](docs/WHATSAPP.md)

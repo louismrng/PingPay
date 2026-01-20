@@ -9,6 +9,7 @@ using PingPay.Infrastructure.Services;
 using PingPay.Infrastructure.Services.KeyManagement;
 using PingPay.Infrastructure.Services.Sms;
 using PingPay.Infrastructure.Services.Solana;
+using PingPay.Infrastructure.Services.WhatsApp;
 using StackExchange.Redis;
 
 namespace PingPay.Infrastructure;
@@ -78,6 +79,14 @@ public static class DependencyInjection
 
         // Key Rotation Service
         services.AddScoped<KeyRotationService>();
+
+        // Solana Balance Service (cached)
+        services.AddScoped<CachedSolanaBalanceService>();
+
+        // WhatsApp Services
+        services.AddScoped<MessageParserService>();
+        services.AddScoped<WhatsAppSenderService>();
+        services.AddScoped<WhatsAppBotService>();
 
         return services;
     }
