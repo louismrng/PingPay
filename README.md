@@ -113,6 +113,7 @@ dotnet test --filter "Category=Integration"
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Running the Backend](docs/RUNNING.md)
+- [Deploy to Railway](docs/DEPLOY_RAILWAY.md)
 - [Security & Encryption](docs/SECURITY.md)
 - [Solana Integration](docs/SOLANA_INTEGRATION.md)
 - [WhatsApp Bot](docs/WHATSAPP.md)

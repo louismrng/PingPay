@@ -32,7 +32,9 @@ COPY --from=build /app/publish .
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8080/health || exit 1
 
-EXPOSE 8080
-ENV ASPNETCORE_URLS=http://+:8080
+# Railway injects PORT env var
+ENV ASPNETCORE_URLS=http://+:${PORT:-8080}
+ENV ASPNETCORE_ENVIRONMENT=Production
 
+EXPOSE 8080
 ENTRYPOINT ["dotnet", "PingPay.Api.dll"]
