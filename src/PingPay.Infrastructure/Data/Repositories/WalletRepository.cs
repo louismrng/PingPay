@@ -13,6 +13,11 @@ public class WalletRepository : IWalletRepository
         _context = context;
     }
 
+    public async Task<Wallet?> GetByIdAsync(Guid id, CancellationToken ct = default)
+    {
+        return await _context.Wallets.FindAsync(new object[] { id }, ct);
+    }
+
     public async Task<Wallet?> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
     {
         return await _context.Wallets
@@ -40,5 +45,30 @@ public class WalletRepository : IWalletRepository
     {
         _context.Wallets.Update(wallet);
         await _context.SaveChangesAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<Wallet>> GetActiveWalletsAsync(
+        TimeSpan activityWindow,
+        int maxCount = 100,
+        CancellationToken ct = default)
+    {
+        var cutoff = DateTime.UtcNow - activityWindow;
+
+        // Get wallets where the user has been active (last login or transaction)
+        return await _context.Wallets
+            .Include(w => w.User)
+            .Where(w => w.User != null && w.User.LastLoginAt >= cutoff)
+            .OrderByDescending(w => w.User!.LastLoginAt)
+            .Take(maxCount)
+            .ToListAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<Wallet>> GetAllActiveWalletsAsync(CancellationToken ct = default)
+    {
+        // Get all wallets where the user is active (not suspended)
+        return await _context.Wallets
+            .Include(w => w.User)
+            .Where(w => w.User != null && w.User.IsActive)
+            .ToListAsync(ct);
     }
 }

@@ -44,13 +44,34 @@ public class TransactionRepository : ITransactionRepository
             .ToListAsync(ct);
     }
 
-    public async Task<IReadOnlyList<Transaction>> GetPendingTransactionsAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyList<Transaction>> GetPendingTransactionsAsync(
+        int maxCount = 50,
+        CancellationToken ct = default)
     {
         return await _context.Transactions
             .Where(t => t.Status == TransactionStatus.Pending || t.Status == TransactionStatus.Processing)
             .OrderBy(t => t.CreatedAt)
-            .Take(100)
+            .Take(maxCount)
             .ToListAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<Transaction>> GetStaleTransactionsAsync(
+        DateTime olderThan,
+        int maxCount = 100,
+        CancellationToken ct = default)
+    {
+        return await _context.Transactions
+            .Where(t => (t.Status == TransactionStatus.Pending || t.Status == TransactionStatus.Processing)
+                        && t.CreatedAt < olderThan)
+            .OrderBy(t => t.CreatedAt)
+            .Take(maxCount)
+            .ToListAsync(ct);
+    }
+
+    public async Task<int> GetPendingTransactionCountAsync(CancellationToken ct = default)
+    {
+        return await _context.Transactions
+            .CountAsync(t => t.Status == TransactionStatus.Pending || t.Status == TransactionStatus.Processing, ct);
     }
 
     public async Task<Transaction> CreateAsync(Transaction transaction, CancellationToken ct = default)

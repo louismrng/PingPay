@@ -12,8 +12,15 @@ public interface ITransactionRepository
         int limit = 50,
         int offset = 0,
         CancellationToken ct = default);
-    Task<IReadOnlyList<Transaction>> GetPendingTransactionsAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<Transaction>> GetPendingTransactionsAsync(
+        int maxCount = 50,
+        CancellationToken ct = default);
+    Task<IReadOnlyList<Transaction>> GetStaleTransactionsAsync(
+        DateTime olderThan,
+        int maxCount = 100,
+        CancellationToken ct = default);
     Task<Transaction> CreateAsync(Transaction transaction, CancellationToken ct = default);
     Task UpdateAsync(Transaction transaction, CancellationToken ct = default);
     Task<decimal> GetDailyTransferredAmountAsync(Guid userId, DateTime since, CancellationToken ct = default);
+    Task<int> GetPendingTransactionCountAsync(CancellationToken ct = default);
 }

@@ -13,10 +13,16 @@ public class Transaction
 
     // Participants
     public Guid SenderId { get; set; }
+    public Guid? SenderWalletId { get; set; }
     public Guid? ReceiverId { get; set; }
 
     /// <summary>
-    /// For withdrawals to external Solana addresses.
+    /// For external transfers - the recipient's Solana address.
+    /// </summary>
+    public string? RecipientAddress { get; set; }
+
+    /// <summary>
+    /// For withdrawals to external Solana addresses (legacy field, use RecipientAddress).
     /// </summary>
     public string? ExternalAddress { get; set; }
 
@@ -41,14 +47,19 @@ public class Transaction
 
     // Timestamps
     public DateTime? ConfirmedAt { get; set; }
+    public DateTime? CompletedAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
     // Navigation
     public User? Sender { get; set; }
     public User? Receiver { get; set; }
+    public Wallet? SenderWallet { get; set; }
 
     // Computed
     public decimal TotalAmount => Amount + FeeAmount;
     public bool CanRetry => RetryCount < MaxRetries && Status != TransactionStatus.Confirmed;
+
+    // Alias for monitor service compatibility
+    public Guid SenderUserId => SenderId;
 }
