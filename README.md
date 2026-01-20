@@ -105,6 +105,7 @@ dotnet test --filter "Category=Integration"
 
 ## Docs
 
+- [Architecture](docs/ARCHITECTURE.md)
 - [Running the Backend](docs/RUNNING.md)
 - [Security & Encryption](docs/SECURITY.md)
 - [Solana Integration](docs/SOLANA_INTEGRATION.md)
