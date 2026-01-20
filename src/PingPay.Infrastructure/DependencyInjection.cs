@@ -66,12 +66,18 @@ public static class DependencyInjection
                 services.AddScoped<IKeyManagementService, AzureKeyVaultService>();
                 break;
             case "awskms":
-                // TODO: Implement AWS KMS service
-                throw new NotImplementedException("AWS KMS support not yet implemented");
+                services.AddScoped<IKeyManagementService, AwsKmsService>();
+                break;
             default:
                 services.AddScoped<IKeyManagementService, LocalKeyManagementService>();
                 break;
         }
+
+        // Wallet Encryption Service (uses the IKeyManagementService)
+        services.AddScoped<IWalletEncryptionService, WalletEncryptionService>();
+
+        // Key Rotation Service
+        services.AddScoped<KeyRotationService>();
 
         return services;
     }
