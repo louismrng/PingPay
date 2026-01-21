@@ -22,7 +22,8 @@ public class WhatsAppSenderService
     {
         _options = options.Value;
         _logger = logger;
-        _fromWhatsApp = $"whatsapp:{_options.FromNumber}";
+        // Twilio options property renamed to FromPhoneNumber
+        _fromWhatsApp = $"whatsapp:{_options.FromPhoneNumber}";
 
         // Initialize Twilio client
         TwilioClient.Init(_options.AccountSid, _options.AuthToken);

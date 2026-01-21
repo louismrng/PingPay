@@ -26,7 +26,8 @@ public class RedisCacheService : ICacheService
         if (value.IsNullOrEmpty)
             return null;
 
-        return JsonSerializer.Deserialize<T>(value!);
+        // Explicitly call string overload to avoid ambiguity with ReadOnlySpan<byte> overload.
+        return JsonSerializer.Deserialize<T>(value!.ToString()!);
     }
 
     public async Task SetAsync<T>(string key, T value, TimeSpan? expiry = null, CancellationToken ct = default)

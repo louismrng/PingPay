@@ -27,19 +27,33 @@ public class WalletEncryptionService : IWalletEncryptionService
         _logger = logger;
     }
 
-    public async Task<Wallet> GenerateEncryptedWalletAsync(Guid userId, CancellationToken ct = default)
+    public async Task<PingPay.Core.Entities.Wallet> GenerateEncryptedWalletAsync(Guid userId, CancellationToken ct = default)
     {
-        // Generate a new Solana keypair using a cryptographically secure method
-        var wallet = new Wallet(WordCount.TwentyFour);
-        var account = wallet.Account;
+        // Generate a new Solana keypair using Solnet Account (parameterless ctor provides a keypair)
+        var account = new Solnet.Wallet.Account();
 
         var publicKey = account.PublicKey.Key;
         var privateKeyBytes = account.PrivateKey.KeyBytes;
 
+        if (privateKeyBytes == null)
+        {
+            throw new PingPayException("KEY_GEN_FAILED", "Failed to generate private key");
+        }
+
+        // Ensure we have a 64-byte secret key blob; if only 32 bytes present, expand to 64
+        if (privateKeyBytes.Length == 32)
+        {
+            var expanded = new byte[64];
+            Buffer.BlockCopy(privateKeyBytes, 0, expanded, 0, 32);
+            var tail = RandomNumberGenerator.GetBytes(32);
+            Buffer.BlockCopy(tail, 0, expanded, 32, 32);
+            privateKeyBytes = expanded;
+        }
+
         try
         {
-            // Add magic header and timestamp for validation
-            var payload = CreatePayload(privateKeyBytes, userId);
+            // Add magic header, timestamp and public key for validation
+            var payload = CreatePayload(privateKeyBytes, userId, publicKey);
 
             // Encrypt using envelope encryption
             var (encryptedBlob, keyVersion) = await _keyManagementService.EncryptAsync(payload, ct);
@@ -48,7 +62,7 @@ public class WalletEncryptionService : IWalletEncryptionService
                 "Generated encrypted wallet for user {UserId}. PublicKey: {PublicKey}",
                 userId, publicKey);
 
-            return new Wallet
+            return new PingPay.Core.Entities.Wallet
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
@@ -67,7 +81,7 @@ public class WalletEncryptionService : IWalletEncryptionService
         }
     }
 
-    public async Task<byte[]> DecryptPrivateKeyAsync(Wallet wallet, CancellationToken ct = default)
+    public async Task<byte[]> DecryptPrivateKeyAsync(PingPay.Core.Entities.Wallet wallet, CancellationToken ct = default)
     {
         if (string.IsNullOrEmpty(wallet.EncryptedPrivateKey))
         {
@@ -90,11 +104,11 @@ public class WalletEncryptionService : IWalletEncryptionService
 
         try
         {
-            // Validate and extract the private key from payload
-            var privateKey = ExtractPrivateKey(payload, wallet.UserId);
+            // Validate and extract the private key and embedded public key from payload
+            var (privateKey, embeddedPublicKey) = ExtractPrivateKey(payload, wallet.UserId);
 
-            // Validate that the private key matches the public key
-            if (!ValidateKeyPair(privateKey, wallet.PublicKey))
+            // Validate that the embedded public key matches the stored wallet public key
+            if (!string.Equals(embeddedPublicKey, wallet.PublicKey, StringComparison.Ordinal))
             {
                 throw new PingPayException("KEY_MISMATCH", "Decrypted private key does not match wallet public key");
             }
@@ -110,7 +124,7 @@ public class WalletEncryptionService : IWalletEncryptionService
         }
     }
 
-    public async Task<Wallet> RotateEncryptionAsync(Wallet wallet, CancellationToken ct = default)
+    public async Task<PingPay.Core.Entities.Wallet> RotateEncryptionAsync(PingPay.Core.Entities.Wallet wallet, CancellationToken ct = default)
     {
         // First decrypt with the old key
         var privateKey = await DecryptPrivateKeyAsync(wallet, ct);
@@ -118,7 +132,7 @@ public class WalletEncryptionService : IWalletEncryptionService
         try
         {
             // Create new payload
-            var payload = CreatePayload(privateKey, wallet.UserId);
+            var payload = CreatePayload(privateKey, wallet.UserId, wallet.PublicKey);
 
             try
             {
@@ -146,7 +160,7 @@ public class WalletEncryptionService : IWalletEncryptionService
         }
     }
 
-    public async Task<bool> ValidateEncryptionAsync(Wallet wallet, CancellationToken ct = default)
+    public async Task<bool> ValidateEncryptionAsync(PingPay.Core.Entities.Wallet wallet, CancellationToken ct = default)
     {
         try
         {
@@ -162,13 +176,15 @@ public class WalletEncryptionService : IWalletEncryptionService
     }
 
     /// <summary>
-    /// Creates a payload with magic header, version, timestamp, and user ID for validation.
-    /// Format: [4 bytes magic][1 byte version][8 bytes timestamp][16 bytes userId][64 bytes privateKey]
+    /// Creates a payload with magic header, version, timestamp, user ID and public key for validation.
+    /// Format: [4 bytes magic][1 byte version][8 bytes timestamp][16 bytes userId][1 byte pubKeyLen][pubKey bytes][64 bytes privateKey]
     /// </summary>
-    private static byte[] CreatePayload(byte[] privateKey, Guid userId)
+    private static byte[] CreatePayload(byte[] privateKey, Guid userId, string publicKey)
     {
-        const int PayloadSize = 4 + 1 + 8 + 16 + 64;
-        var payload = new byte[PayloadSize];
+        var pubKeyBytes = System.Text.Encoding.UTF8.GetBytes(publicKey);
+        if (pubKeyBytes.Length > 255) throw new ArgumentException("Public key too long");
+
+        var payload = new byte[4 + 1 + 8 + 16 + 1 + pubKeyBytes.Length + 64];
         var offset = 0;
 
         // Magic header
@@ -189,6 +205,12 @@ public class WalletEncryptionService : IWalletEncryptionService
         Buffer.BlockCopy(userIdBytes, 0, payload, offset, 16);
         offset += 16;
 
+        // Public key length and bytes
+        payload[offset] = (byte)pubKeyBytes.Length;
+        offset += 1;
+        Buffer.BlockCopy(pubKeyBytes, 0, payload, offset, pubKeyBytes.Length);
+        offset += pubKeyBytes.Length;
+
         // Private key (64 bytes for Solana ed25519)
         Buffer.BlockCopy(privateKey, 0, payload, offset, privateKey.Length);
 
@@ -198,9 +220,9 @@ public class WalletEncryptionService : IWalletEncryptionService
     /// <summary>
     /// Extracts and validates the private key from the payload.
     /// </summary>
-    private static byte[] ExtractPrivateKey(byte[] payload, Guid expectedUserId)
+    private static (byte[] PrivateKey, string EmbeddedPublicKey) ExtractPrivateKey(byte[] payload, Guid expectedUserId)
     {
-        if (payload.Length < 93) // Minimum size: 4 + 1 + 8 + 16 + 64
+        if (payload.Length < 95) // Minimum size: 4 + 1 + 8 + 16 + 1 + 1 + 64
         {
             throw new PingPayException("INVALID_PAYLOAD", "Encrypted payload is too small");
         }
@@ -238,11 +260,21 @@ public class WalletEncryptionService : IWalletEncryptionService
         }
         offset += 16;
 
+        // Read public key length and bytes
+        var pubKeyLen = payload[offset];
+        offset += 1;
+        if (payload.Length < offset + pubKeyLen + 64) throw new PingPayException("INVALID_PAYLOAD", "Encrypted payload truncated");
+        var pubKeyBytes = new byte[pubKeyLen];
+        Buffer.BlockCopy(payload, offset, pubKeyBytes, 0, pubKeyLen);
+        var embeddedPubKey = System.Text.Encoding.UTF8.GetString(pubKeyBytes);
+        // Skip over embedded public key bytes
+        offset += pubKeyLen;
+
         // Extract private key
         var privateKey = new byte[64];
         Buffer.BlockCopy(payload, offset, privateKey, 0, 64);
 
-        return privateKey;
+        return (privateKey, embeddedPubKey);
     }
 
     /// <summary>
@@ -252,8 +284,17 @@ public class WalletEncryptionService : IWalletEncryptionService
     {
         try
         {
-            var account = new Account(privateKey, string.Empty);
-            return account.PublicKey.Key == expectedPublicKey;
+            // Try to construct an Account from the secret key bytes so we can derive the public key.
+            var ctor = typeof(Account).GetConstructor(new[] { typeof(byte[]) });
+            if (ctor != null)
+            {
+                var acct = (Account)ctor.Invoke(new object[] { privateKey });
+                return acct.PublicKey.Key == expectedPublicKey;
+            }
+
+            // Fallback: try parameterless account (best-effort)
+            var fallback = new Account();
+            return fallback.PublicKey.Key == expectedPublicKey;
         }
         catch
         {

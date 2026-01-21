@@ -1,7 +1,6 @@
-
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 18
+VisualStudioVersion = 18.3.11408.92 d18.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PingPay.Api", "src\PingPay.Api\PingPay.Api.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
 EndProject
@@ -38,10 +37,16 @@ Global
 		{D4E5F678-90AB-CDEF-1234-56789ABCDEF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4E5F678-90AB-CDEF-1234-56789ABCDEF0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890} = {E5F67890-ABCD-EF12-3456-789ABCDEF012}
 		{B2C3D4E5-F678-90AB-CDEF-123456789ABC} = {E5F67890-ABCD-EF12-3456-789ABCDEF012}
 		{C3D4E5F6-7890-ABCD-EF12-3456789ABCDE} = {E5F67890-ABCD-EF12-3456-789ABCDEF012}
 		{D4E5F678-90AB-CDEF-1234-56789ABCDEF0} = {F6789012-CDEF-1234-5678-9ABCDEF01234}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F74132A0-1545-4207-8372-7DBB509011EE}
 	EndGlobalSection
 EndGlobal

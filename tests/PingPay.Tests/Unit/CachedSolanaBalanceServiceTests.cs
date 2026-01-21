@@ -42,7 +42,7 @@ public class CachedSolanaBalanceServiceTests
         var cachedBalance = new { Balance = 100.5m, FetchedAt = DateTime.UtcNow };
 
         _cacheServiceMock
-            .Setup(c => c.GetAsync<It.IsAnyType>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetAsync<object>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(cachedBalance);
 
         // Act
@@ -62,7 +62,7 @@ public class CachedSolanaBalanceServiceTests
         var publicKey = "TestPublicKey123456789012345678901234567890";
 
         _cacheServiceMock
-            .Setup(c => c.GetAsync<It.IsAnyType>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetAsync<object>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((object?)null);
 
         _solanaServiceMock
@@ -98,7 +98,7 @@ public class CachedSolanaBalanceServiceTests
         // Assert
         balance.Should().Be(300m);
         _cacheServiceMock.Verify(
-            c => c.GetAsync<It.IsAnyType>(It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            c => c.GetAsync<object>(It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -109,7 +109,7 @@ public class CachedSolanaBalanceServiceTests
         var publicKey = "TestPublicKey123456789012345678901234567890";
 
         _cacheServiceMock
-            .Setup(c => c.GetAsync<It.IsAnyType>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetAsync<object>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((object?)null);
 
         _solanaServiceMock
@@ -130,7 +130,7 @@ public class CachedSolanaBalanceServiceTests
         var publicKey = "TestPublicKey123456789012345678901234567890";
 
         _cacheServiceMock
-            .Setup(c => c.GetAsync<It.IsAnyType>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetAsync<object>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((object?)null);
 
         _solanaServiceMock
@@ -191,7 +191,7 @@ public class CachedSolanaBalanceServiceTests
         var publicKey = "TestPublicKey123456789012345678901234567890";
 
         _cacheServiceMock
-            .Setup(c => c.GetAsync<It.IsAnyType>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetAsync<object>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((object?)null);
 
         _solanaServiceMock
@@ -214,7 +214,7 @@ public class CachedSolanaBalanceServiceTests
         var publicKey = "TestPublicKey123456789012345678901234567890";
 
         _cacheServiceMock
-            .Setup(c => c.GetAsync<It.IsAnyType>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetAsync<object>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((object?)null);
 
         _solanaServiceMock
@@ -237,7 +237,7 @@ public class CachedSolanaBalanceServiceTests
         var publicKey = "TestPublicKey123456789012345678901234567890";
 
         _cacheServiceMock
-            .Setup(c => c.GetAsync<It.IsAnyType>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetAsync<object>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((object?)null);
 
         _solanaServiceMock
@@ -259,7 +259,7 @@ public class CachedSolanaBalanceServiceTests
         var publicKey = "TestPublicKey123456789012345678901234567890";
 
         _cacheServiceMock
-            .Setup(c => c.GetAsync<It.IsAnyType>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetAsync<object>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((object?)null);
 
         _solanaServiceMock

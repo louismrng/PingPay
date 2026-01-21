@@ -98,8 +98,8 @@ public class WhatsAppBotService
     {
         if (existingUser != null)
         {
-            var wallet = await _walletRepository.GetByUserIdAsync(existingUser.Id, ct);
-            return Success($"You're already registered!\n\nYour wallet: `{wallet?.PublicKey[..8]}...`\n\nReply 'balance' to check funds.");
+            var existingWallet = await _walletRepository.GetByUserIdAsync(existingUser.Id, ct);
+            return Success($"You're already registered!\n\nYour wallet: `{existingWallet?.PublicKey[..8]}...`\n\nReply 'balance' to check funds.");
         }
 
         // Create new user
@@ -107,7 +107,7 @@ public class WhatsAppBotService
         {
             PhoneNumber = phoneNumber,
             IsActive = true,
-            IsPhoneVerified = true // Verified via WhatsApp
+            IsVerified = true // Verified via WhatsApp
         }, ct);
 
         // Generate and encrypt wallet

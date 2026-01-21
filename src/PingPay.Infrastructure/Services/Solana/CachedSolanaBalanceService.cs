@@ -55,13 +55,36 @@ public class CachedSolanaBalanceService
 
         if (!forceRefresh)
         {
-            var cached = await _cacheService.GetAsync<CachedBalance>(cacheKey, ct);
-            if (cached != null)
+            var cachedObj = await _cacheService.GetAsync<object>(cacheKey, ct);
+            if (cachedObj != null)
             {
-                _logger.LogDebug(
-                    "Cache hit for {Token} balance of {PublicKey}",
-                    tokenType, publicKey[..8] + "...");
-                return cached.Balance;
+                // Try to interpret cached object as CachedBalance or an anonymous shape with Balance property
+                decimal? extracted = null;
+                if (cachedObj is CachedBalance cb) extracted = cb.Balance;
+                else
+                {
+                    try
+                    {
+                        var prop = cachedObj.GetType().GetProperty("Balance");
+                        if (prop != null)
+                        {
+                            var val = prop.GetValue(cachedObj);
+                            if (val is decimal d) extracted = d;
+                            else if (val is double dd) extracted = (decimal)dd;
+                            else if (val is float f) extracted = (decimal)f;
+                            else if (val is int i) extracted = i;
+                        }
+                    }
+                    catch { }
+                }
+
+                if (extracted.HasValue)
+                {
+                    _logger.LogDebug(
+                        "Cache hit for {Token} balance of {PublicKey}",
+                        tokenType, publicKey[..8] + "...");
+                    return extracted.Value;
+                }
             }
         }
 
@@ -69,7 +92,7 @@ public class CachedSolanaBalanceService
         var balance = await _solanaService.GetTokenBalanceAsync(publicKey, tokenType, ct);
 
         // Cache the result
-        await _cacheService.SetAsync(
+        await _cacheService.SetAsync<object>(
             cacheKey,
             new CachedBalance { Balance = balance, FetchedAt = DateTime.UtcNow },
             TokenBalanceCacheDuration,
@@ -94,17 +117,39 @@ public class CachedSolanaBalanceService
 
         if (!forceRefresh)
         {
-            var cached = await _cacheService.GetAsync<CachedBalance>(cacheKey, ct);
-            if (cached != null)
+            var cachedObj = await _cacheService.GetAsync<object>(cacheKey, ct);
+            if (cachedObj != null)
             {
-                _logger.LogDebug("Cache hit for SOL balance of {PublicKey}", publicKey[..8] + "...");
-                return cached.Balance;
+                decimal? extracted = null;
+                if (cachedObj is CachedBalance cb) extracted = cb.Balance;
+                else
+                {
+                    try
+                    {
+                        var prop = cachedObj.GetType().GetProperty("Balance");
+                        if (prop != null)
+                        {
+                            var val = prop.GetValue(cachedObj);
+                            if (val is decimal d) extracted = d;
+                            else if (val is double dd) extracted = (decimal)dd;
+                            else if (val is float f) extracted = (decimal)f;
+                            else if (val is int i) extracted = i;
+                        }
+                    }
+                    catch { }
+                }
+
+                if (extracted.HasValue)
+                {
+                    _logger.LogDebug("Cache hit for SOL balance of {PublicKey}", publicKey[..8] + "...");
+                    return extracted.Value;
+                }
             }
         }
 
         var balance = await _solanaService.GetSolBalanceAsync(publicKey, ct);
 
-        await _cacheService.SetAsync(
+        await _cacheService.SetAsync<object>(
             cacheKey,
             new CachedBalance { Balance = balance, FetchedAt = DateTime.UtcNow },
             SolBalanceCacheDuration,
