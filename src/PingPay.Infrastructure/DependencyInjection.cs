@@ -7,8 +7,10 @@ using PingPay.Infrastructure.Data;
 using PingPay.Infrastructure.Data.Repositories;
 using PingPay.Infrastructure.Services;
 using PingPay.Infrastructure.Services.KeyManagement;
+using PingPay.Infrastructure.Services.Signal;
 using PingPay.Infrastructure.Services.Sms;
 using PingPay.Infrastructure.Services.Solana;
+using PingPay.Infrastructure.Services.Telegram;
 using PingPay.Infrastructure.Services.WhatsApp;
 using StackExchange.Redis;
 
@@ -25,6 +27,8 @@ public static class DependencyInjection
         services.Configure<RedisOptions>(configuration.GetSection(RedisOptions.SectionName));
         services.Configure<SolanaOptions>(configuration.GetSection(SolanaOptions.SectionName));
         services.Configure<TwilioOptions>(configuration.GetSection(TwilioOptions.SectionName));
+        services.Configure<TelegramOptions>(configuration.GetSection(TelegramOptions.SectionName));
+        services.Configure<SignalOptions>(configuration.GetSection(SignalOptions.SectionName));
         services.Configure<KeyManagementOptions>(configuration.GetSection(KeyManagementOptions.SectionName));
         services.Configure<OtpOptions>(configuration.GetSection(OtpOptions.SectionName));
         services.Configure<RateLimitOptions>(configuration.GetSection(RateLimitOptions.SectionName));
@@ -87,6 +91,14 @@ public static class DependencyInjection
         services.AddScoped<MessageParserService>();
         services.AddScoped<WhatsAppSenderService>();
         services.AddScoped<WhatsAppBotService>();
+
+        // Telegram Services
+        services.AddScoped<ITelegramSenderService, TelegramSenderService>();
+        services.AddScoped<TelegramBotService>();
+
+        // Signal Services
+        services.AddHttpClient<ISignalSenderService, SignalSenderService>();
+        services.AddScoped<SignalBotService>();
 
         return services;
     }

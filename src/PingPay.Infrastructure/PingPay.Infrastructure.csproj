@@ -34,6 +34,9 @@
     <!-- SMS -->
     <PackageReference Include="Twilio" Version="7.0.4" />
 
+    <!-- Messaging Platforms -->
+    <PackageReference Include="Telegram.Bot" Version="22.0.0" />
+
     <!-- Background Jobs -->
     <PackageReference Include="Hangfire.Core" Version="1.8.14" />
     <PackageReference Include="Hangfire.PostgreSql" Version="1.20.9" />
